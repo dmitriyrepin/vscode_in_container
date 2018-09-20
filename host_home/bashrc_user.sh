@@ -1,13 +1,15 @@
 echo "Loading customizations from ./.bashrc_user.sh"
 
 # Install VS Code plugins, if those has not yet been installed
-source /headless/.host_home/install_vscode_plugins.sh
+if [ -f /headless/.host_home/install_vscode_plugins.sh ]; then
+    source /headless/.host_home/install_vscode_plugins.sh
+fi
 
 #-------------------
 # Personnal Aliases
 #-------------------
 
-# alias ls='ls -h --color'
+alias ls='ls -h --color'
 
 alias cp='cp -i'                    # prompt user if overwriting during copy
 alias rm='rm -i'                    # prompt user when deleting a file
@@ -50,3 +52,17 @@ alias ip="curl icanhazip.com"           # Get your current public IP
 
 mcd() { mkdir -p "$1"; cd "$1";} 
 cdd() { cd "$1"; ls;}
+
+#-----------------------------------
+# Set prompt colors (see C:\Program Files\Git\etc\profile.d\git-prompt.sh
+#-----------------------------------
+PS1='\[\033]0;$TITLEPREFIX:$PWD\007\]' # set window title
+PS1="$PS1"'\[\033[32m\]'       # change to green
+PS1="$PS1"'\u@\h '             # user@host<space>
+PS1="$PS1"'\[\033[35m\]'       # change to purple
+PS1="$PS1"'$MSYSTEM '          # show MSYSTEM
+PS1="$PS1"'\[\033[33m\]'       # change to brownish yellow
+PS1="$PS1"'\w'                 # current working directory
+PS1="$PS1"'\[\033[0m\]'        # change color
+PS1="$PS1"'\n'                 # new line
+PS1="$PS1"'$ '                 # prompt: always $

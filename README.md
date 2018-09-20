@@ -5,90 +5,58 @@ A Docker container for C++/Python/C# server-side development with Microsoft Visu
 https://hub.docker.com/r/consol/centos-xfce-vnc/
 https://github.com/ConSol/docker-headless-vnc-container
 
-TODO: Change 'jord-viz-dev'
-
-## Build the enhanced docker image
+## Build the docker image
 ```bash
-docker build -f centos-base.Dockerfile -t gcr.io/jord-viz-dev/drepin-centos-base .
-docker build -f centos.Dockerfile -t gcr.io/jord-viz-dev/drepin-centos .
-# Run the following command to build a custom docker image
-docker build -f centos-user.Dockerfile \
-    --build-arg user=${USER} --build-arg uid=$(id -u) --build-arg gid=$(id -g) \
-    -t gcr.io/jord-viz-dev/drepin-centos-${USER} .
-
-docker push gcr.io/jord-viz-dev/drepin-centos-base
-docker push gcr.io/jord-viz-dev/drepin-centos
-docker push gcr.io/jord-viz-dev/drepin-centos-${USER}
-
+docker build -f centos-base.Dockerfile -t gcr.io/my-google-project/centos-base .
+docker push gcr.io/my-google-project/centos-base
 ```
 
 ## Create and run the VNC container
-Run command with mapping to local port `5901` (vnc protocol), change the default user within a container to your. 
+Create a container from the image. 
+* Make sure to map the local port `5901` (used by the vnc protocol) to enable connecting with a VNC Viewer client.
+* Specify the VNC password a command line option (e.g, `mylogin` below).
+* To avoid loosing your work when the container shuts down, map the `${HOME}/docker-home` directory on the host 
+to the `/host` in the container. Do all your work in the `/host/`. 
+* You need to specify the `--security-opt seccomp=unconfined` option if you plan to do C/C++ debugging. 
 ```Bash
-# Get into a new container as root using bash without running the initialization script
-docker run -it --rm --user 0 --name centos --entrypoint=/bin/bash gcr.io/jord-viz-dev/drepin-centos
-docker run -it --rm --user 0 --name centos-base --entrypoint=/bin/bash gcr.io/jord-viz-dev/drepin-centos-base
-
-# Get into a new container as yourself using bash after running the initialization script
-docker run -it --rm --user $(id -u) --name centos gcr.io/jord-viz-dev/drepin-centos bash
-# Get into a running container as a root using bash
-docker exec -it --user 0 centos bash
-```
-To avoid loosing your work when the container shuts down, map a `${HOME}/docker-home` directory on the host 
-to the `/host` in the container. Do all your work in `/host/`. The VNC password is set to `mylogin`. You need to specify the `--security-opt seccomp=unconfined` option if you plan to do debugging. To enable VNC Viewer client  support, the command below does mapping to local port `5901` (vnc protocol).
-
-```Bash
-# Bash: Run interactive VNC session 
-# NOTE: plugins are installed on initialization only once if /headless/.vscode is mounted
-docker pull gcr.io/jord-viz-dev/drepin-centos
-mkdir -p ${HOME}/docker-home; mkdir -p ${HOME}/docker-home/host; mkdir -p ${HOME}/docker-home/vscode
-docker run -it --rm -p 5901:5901 -e VNC_PW=mylogin -e VNC_RESOLUTION=2560x1440 --name centos \
-    --user $(id -u) \
+# Bash: Run an interactive VNC session 
+docker pull gcr.io/my-google-project/drepin-centos
+mkdir -p ${HOME}/docker-home/host
+docker run -it --rm --name centos \
+    -p 5901:5901 -e VNC_PW=mylogin -e VNC_RESOLUTION=2560x1440 \
     --security-opt seccomp=unconfined \
     -v ${HOME}/docker-home/host:/host \
-    -v ${HOME}/docker-home/vscode:/headless/.vscode \
-    gcr.io/jord-viz-dev/drepin-centos
-
-# Bash: Run interactive VNC session as `drepin`
-# NOTE: Plugins are already backed-in into the image, but ${HOME}/docker-home/ will be owned by `drepin`
-docker pull gcr.io/jord-viz-dev/drepin-centos
-mkdir -p ${HOME}/docker-home; mkdir -p ${HOME}/docker-home/host;
-docker run -it --rm -p 5901:5901 -e VNC_PW=mylogin -e VNC_RESOLUTION=2560x1440 --name centos \
-    --security-opt seccomp=unconfined \
-    -v ${HOME}/docker-home/host:/host \
-    gcr.io/jord-viz-dev/drepin-centos-drepin
+    -v config:/headless/.config \
+    gcr.io/my-google-project/drepin-centos
 ```
 
-```PowerShell
-# PopwerShell: Run interactive VNC session
-# NOTE: plugins are installed on initialization only once if /headless/.vscode is mounted
-docker pull gcr.io/jord-viz-dev/drepin-centos
-mkdir -force ${HOME}/docker-home; mkdir -force ${HOME}/docker-home/host; mkdir -force ${HOME}/docker-home/vscode
-docker run -it --rm -p 5901:5901 -e VNC_PW=mylogin -e VNC_RESOLUTION=2560x1440 --name centos `
-    --security-opt seccomp=unconfined `
-    -v ${HOME}/docker-home/host:/host `
-    -v ${HOME}/docker-home/vscode:/headless/.vscode `
-    gcr.io/jord-viz-dev/drepin-centos
+For security reasons, by the default, the container will run as the user 1000. You will have a permission to modify the system (e.g., to run 'yum install'). 
+
+If you need to permor an action requiring an elevated permissions, you can connect to the running container as a root using bash
+```Bash
+docker exec -it --user 0 centos-base bash
 ```
 
 ## Connect & Control
-If the container is started like mentioned above on a Goolge VM with the local IP 10.128.0.16, connect via one of these options:
+If the container is started like mentioned above on a Goolge VM with the local IP 10.128.0.16, connect to it via one of these options:
 
 * connect via __VNC viewer `10.128.0.16:5901`__, where password: `mylogin`
 
 ## Building and debugging
 
-1. Out-of-directory building using CMake:
+* After performaing 'git clone' in a container, don't forget to set your infor. You will need it for 'git push'
+
+        git config user.email "drepin@hotmail.com"
+        git config user.name "Dmitriy Repin"
+
+* C/C++: out-of-directory building using CMake:
     (mkdir ../build; cmake -H. -B../build -DCMAKE_BUILD_TYPE=Debug; cd ../build; make)
 
-2. Make sure you set the build type to 'Debug' if you plan debugging. Otherwise, you might get a criptic gdb message
+* C/C++: Make sure you set the build type to 'Debug' if you plan debugging. Otherwise, you might get a criptic gdb message
 
-3. Here is an example C++ Lauch Debug configuration. To debugg gdb issues, set `engineLogging` to true
+* C++: example C++ Launch Debug configuration. To debugg gdb issues, set `engineLogging` to true
 ```json
 {
-    // Use IntelliSense to learn about possible attributes.
-    // Hover to view descriptions of existing attributes.
-    // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
     "version": "0.2.0",
     "configurations": [
         
@@ -117,8 +85,72 @@ If the container is started like mentioned above on a Goolge VM with the local I
 
 ```
 
-## Hints
+* Python: remove pycache 
 
-    docker rm -f $(docker ps -aq) 
-    docker image rm $(docker image ls -aq)
-    docker volume rm $(docker volume ls -q)
+        find ./ -name "__pycache__" -exec rm -rf {} \;
+        find ./ -name ".pytest_cache" -exec rm -rf {} \;
+
+* Python: AN example of Launch Debug configuration
+```json
+{
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "Python: main.py",
+            "type": "python",
+            "request": "launch",
+            "program": "${workspaceFolder}/src/main.py",
+            "console": "integratedTerminal"
+        },
+        {
+            "name": "Python: run_tests.py",
+            "type": "python",
+            "request": "launch",
+            "program": "${workspaceFolder}/src/run_tests.py",
+            "console": "integratedTerminal",
+        }
+    ]
+}
+```
+
+## Miscellaneous
+
+Misc docker commands
+
+        docker rm -f $(docker ps -aq) 
+        docker image rm $(docker image ls -aq)
+        docker volume rm $(docker volume ls -q)
+
+To change resolution on the fly, run `xrandr` to see the available modes. Then run
+
+        xrandr -s 1280x800
+        xrandr -s 1920x1200
+        xrandr -s 2560x1440
+
+VS Code settings
+```json
+{
+    "editor.autoClosingBrackets": false,
+    "editor.detectIndentation": false,
+    "editor.minimap.enabled": false,
+    // "editor.formatOnSave": true,
+    // "editor.formatOnType": true,
+    // "editor.formatOnPaste": true,
+    // "[dockerfile]": {
+    //     "editor.formatOnSave": false,
+    // },
+    "git.enableSmartCommit": true,
+    "extensions.ignoreRecommendations": true,
+    "python.pythonPath": "/usr/bin/python3",
+    "python.linting.pylintArgs": [
+        "--max-line-length=120",
+        "--disable=missing-docstring",
+        "--disable=unused-variable",
+        "--disable=unused-argument",
+        "--disable=trailing-whitespace"
+    ],
+    "python.formatting.autopep8Args": [
+        "--max-line-length=120"
+    ]
+}
+```

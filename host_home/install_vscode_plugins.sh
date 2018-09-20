@@ -4,7 +4,7 @@
 #
 
 ### every exit != 0 fails the script
-set -e
+# set -ex
 
 if [ -f /headless/.vscode/__extensions_installed.txt ]; then
     echo "Nothing to do: VS Code plugins have already been installed"
