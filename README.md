@@ -18,14 +18,15 @@ docker push gcr.io/my-google-project-id/centos-base
 ## Create and run the VNC container
 Create a container from the image. 
 * Make sure to map the local port `5901` (used by the vnc protocol) to enable connecting with a VNC Viewer client.
-* Specify the VNC password a command line option (e.g, `mylogin` below).
+* Specify the VNC password as a command line option (e.g, `mylogin` below).
 * To avoid loosing your work when the container shuts down, map the `${HOME}/docker-home` directory on the host 
-to the `/host` in the container. Do all your work in the `/host/`. 
+to the `/host` in the container. Do all the work that needs to be persisted in the `/host/`. 
 * You need to specify the `--security-opt seccomp=unconfined` option if you plan to do C/C++ debugging. 
 ```Bash
 # Bash: Run an interactive VNC session 
 docker pull gcr.io/my-google-project/drepin-centos
-mkdir -p ${HOME}/docker-home/host
+# Make sure the host is owned by the user 1000
+mkdir -p ${HOME}/docker-home/host; chown 1000 ${HOME}/docker-home/host
 docker run -it --rm --name centos \
     -p 5901:5901 -e VNC_PW=mylogin -e VNC_RESOLUTION=2560x1440 \
     --security-opt seccomp=unconfined \
