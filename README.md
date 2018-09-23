@@ -11,8 +11,8 @@ https://github.com/ConSol/docker-headless-vnc-container
 gcloud auth configure-docker
 
 # Makee sure to use the project is, not the project name
-docker build -f centos-base.Dockerfile -t gcr.io/my-google-project-id/centos-base .
-docker push gcr.io/my-google-project-id/centos-base
+docker build -f centos-base.Dockerfile -t gcr.io/my-google-project-id/centos-base:latest .
+docker push gcr.io/my-google-project-id/centos-base:latest
 ```
 
 ## Create and run the VNC container
@@ -24,7 +24,7 @@ to the `/host` in the container. Do all the work that needs to be persisted in t
 * You need to specify the `--security-opt seccomp=unconfined` option if you plan to do C/C++ debugging. 
 ```Bash
 # Bash: Run an interactive VNC session 
-docker pull gcr.io/my-google-project/drepin-centos
+docker pull gcr.io/my-google-project/drepin-centos:latest
 # Make sure the host is owned by the user 1000
 mkdir -p ${HOME}/docker-home/host; chown 1000 ${HOME}/docker-home/host
 docker run -it --rm --name centos \
@@ -32,7 +32,7 @@ docker run -it --rm --name centos \
     --security-opt seccomp=unconfined \
     -v ${HOME}/docker-home/host:/host \
     -v config:/headless/.config \
-    gcr.io/my-google-project/drepin-centos
+    gcr.io/my-google-project/centos-base
 ```
 
 For security reasons, by the default, the container will run as the user 1000. You will have a permission to modify the system (e.g., to run 'yum install'). 
