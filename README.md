@@ -7,8 +7,12 @@ https://github.com/ConSol/docker-headless-vnc-container
 
 ## Build the docker image
 ```bash
-docker build -f centos-base.Dockerfile -t gcr.io/my-google-project/centos-base .
-docker push gcr.io/my-google-project/centos-base
+# Configured Docker to use gcloud as a credential helper (do this once): 
+gcloud auth configure-docker
+
+# Makee sure to use the project is, not the project name
+docker build -f centos-base.Dockerfile -t gcr.io/my-google-project-id/centos-base .
+docker push gcr.io/my-google-project-id/centos-base
 ```
 
 ## Create and run the VNC container
